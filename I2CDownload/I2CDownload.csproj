@@ -1,0 +1,269 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{C7ADD259-0AB3-4944-85D4-2A34CB9A52B1}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>I2CDownload</RootNamespace>
+    <AssemblyName>I2CDownload Tool V1.00</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <PublishUrl>发布\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Download.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EPPlus">
+      <HintPath>.\EPPlus.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AardvarkLibrary\aardvark.cs" />
+    <Compile Include="AardvarkLibrary\Aardvark_Device.cs" />
+    <Compile Include="CH341Library\CH341_Device.cs" />
+    <Compile Include="CH341Library\USBIOXdll.cs" />
+    <Compile Include="Class\AutoSizeForm.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Class\CDatabase.cs" />
+    <Compile Include="Class\ClsBaseCDB.cs" />
+    <Compile Include="Class\ClsFlashSetupConfig.cs" />
+    <Compile Include="Class\ClsImportExportData.cs" />
+    <Compile Include="Class\ClsIniFile.cs" />
+    <Compile Include="CP2112Library\CP2112_Device.cs" />
+    <Compile Include="CP2112Library\SLABCP2112.cs" />
+    <Compile Include="FrmFlashSetup.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmFlashSetup.Designer.cs">
+      <DependentUpon>FrmFlashSetup.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmMain.Designer.cs">
+      <DependentUpon>FrmMain.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmModuleSelect.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmModuleSelect.designer.cs">
+      <DependentUpon>FrmModuleSelect.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmOptions.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmOptions.designer.cs">
+      <DependentUpon>FrmOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmPassword.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmPassword.Designer.cs">
+      <DependentUpon>FrmPassword.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmPasswordModify.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmPasswordModify.Designer.cs">
+      <DependentUpon>FrmPasswordModify.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmReport.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmReport.designer.cs">
+      <DependentUpon>FrmReport.cs</DependentUpon>
+    </Compile>
+    <Compile Include="IDOKMessageBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="strings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>strings.resx</DependentUpon>
+    </Compile>
+    <Compile Include="UserControl\MProgressBar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserControl\MProgressBar.designer.cs">
+      <DependentUpon>MProgressBar.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="FrmFlashSetup.resx">
+      <DependentUpon>FrmFlashSetup.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmFlashSetup.zh-Hans.resx">
+      <DependentUpon>FrmFlashSetup.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmMain.resx">
+      <DependentUpon>FrmMain.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmMain.zh-Hans.resx">
+      <DependentUpon>FrmMain.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmModuleSelect.resx">
+      <DependentUpon>FrmModuleSelect.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmModuleSelect.zh-Hans.resx">
+      <DependentUpon>FrmModuleSelect.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmOptions.resx">
+      <DependentUpon>FrmOptions.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmOptions.zh-Hans.resx">
+      <DependentUpon>FrmOptions.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmPassword.resx">
+      <DependentUpon>FrmPassword.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmPassword.zh-Hans.resx">
+      <DependentUpon>FrmPassword.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmPasswordModify.resx">
+      <DependentUpon>FrmPasswordModify.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmPasswordModify.zh-Hans.resx">
+      <DependentUpon>FrmPasswordModify.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmReport.resx">
+      <DependentUpon>FrmReport.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmReport.zh-Hans.resx">
+      <DependentUpon>FrmReport.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="IDOKMessageBox.resx">
+      <DependentUpon>IDOKMessageBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="IDOKMessageBox.zh-Hans.resx">
+      <DependentUpon>IDOKMessageBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="strings.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>strings.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="strings.zh-Hans.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\MProgressBar.resx">
+      <DependentUpon>MProgressBar.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="app.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Download.ico" />
+    <Content Include="Resources\Download.ico" />
+    <None Include="Resources\Fail.jpg" />
+    <None Include="Resources\Pass.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="ADODB">
+      <Guid>{00000205-0000-0010-8000-00AA006D2EA4}</Guid>
+      <VersionMajor>2</VersionMajor>
+      <VersionMinor>5</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="ADOX">
+      <Guid>{00000600-0000-0010-8000-00AA006D2EA4}</Guid>
+      <VersionMajor>6</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
