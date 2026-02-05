@@ -11,7 +11,7 @@ namespace I2CDownload
     public class ClsBaseCDB
     {
         #region Variate Define
-        public int gintIICChnl = 1;
+        public int USBI2CDriver = 1;
 
         public byte gbytPasswordDevAddr = 0xA0;//模块密码输入的IIC器件地址
         public byte gbytPasswordTableSel = 0x00;//密码输入的IIC选表        
@@ -52,6 +52,7 @@ namespace I2CDownload
         public ushort gwCDBEPLDataSize = 0x800;//数据块长度定为2048Bytes
 
         byte[] mbytCDBPW = { 0xD6, 0x07, 0x42, 0xC6 };//厂商密码
+        byte[] mbytVendorPW = { 0x80, 0x00, 0x00, 0x03 };
         #endregion
 
         #region Const Define
@@ -240,7 +241,7 @@ namespace I2CDownload
         public bool WriteBytes(Byte I2C_Address, Byte DstAddr, int WriteDataNum, Byte[] WriteDataBuf)
         {
             bool bState;
-            if (gintIICChnl == 2)
+            if (USBI2CDriver == 2)
             {
                 if (Aardvark_Device.WriteBytes(I2C_Address, DstAddr, WriteDataNum, WriteDataBuf))
                 {
@@ -251,18 +252,18 @@ namespace I2CDownload
                     bState = false;//写入失败
                 }
             }
-            //else if (gintIICChnl == 2)
-            //{
-            //    if (CH341Device.WriteBytes(I2C_Address, DstAddr, WriteDataNum, WriteDataBuf))
-            //    {
-            //        bState = true;//写入成功
-            //    }
-            //    else
-            //    {
-            //        bState = false;//写入失败
-            //    }
-            //}
-            else if (gintIICChnl == 1)
+            else if (USBI2CDriver == 3)
+            {
+                if (CH341Device.WriteBytes(I2C_Address, DstAddr, WriteDataNum, WriteDataBuf))
+                {
+                    bState = true;//写入成功
+                }
+                else
+                {
+                    bState = false;//写入失败
+                }
+            }
+            else if (USBI2CDriver == 1)
             {
                 if (CP2112Device.WriteBytes(I2C_Address, DstAddr, WriteDataNum, WriteDataBuf))
                 {
@@ -293,7 +294,7 @@ namespace I2CDownload
         {
             int intTemp = ReadDataNum;
             bool bState;
-            if (gintIICChnl == 2)
+            if (USBI2CDriver == 2)
             {
                 if (Aardvark_Device.ReadBytes(I2C_Address, DstAddr, ReadDataNum, ReadDataBuf))
                 {
@@ -304,18 +305,18 @@ namespace I2CDownload
                     bState = false;//读取失败
                 }
             }
-            //else if (gintIICChnl == 2)
-            //{
-            //    if (CH341Device.ReadBytes(I2C_Address, DstAddr, ReadDataNum, ReadDataBuf))
-            //    {
-            //        bState = true;//读取成功
-            //    }
-            //    else
-            //    {
-            //        bState = false;//读取失败
-            //    }
-            //}
-            else if (gintIICChnl == 1)
+            else if (USBI2CDriver == 3)
+            {
+                if (CH341Device.ReadBytes(I2C_Address, DstAddr, ReadDataNum, ReadDataBuf))
+                {
+                    bState = true;//读取成功
+                }
+                else
+                {
+                    bState = false;//读取失败
+                }
+            }
+            else if (USBI2CDriver == 1)
             {
                 if (CP2112Device.ReadBytes(I2C_Address, DstAddr, ReadDataNum, ReadDataBuf))
                 {
@@ -345,7 +346,7 @@ namespace I2CDownload
         public bool CurWriteBytes(Byte I2C_Address, Byte WriteDataNum, Byte[] WriteDataBuf)
         {
             bool bState;
-            if (gintIICChnl == 2)
+            if (USBI2CDriver == 2)
             {
                 if (Aardvark_Device.CurrentWriteBytes(I2C_Address, WriteDataNum, WriteDataBuf))
                 {
@@ -356,18 +357,18 @@ namespace I2CDownload
                     bState = false;//读取失败
                 }
             }
-            //else if (gintIICChnl == 2)
-            //{
-            //    if (CH341Device.CurrentWriteBytes(I2C_Address, WriteDataNum, WriteDataBuf))
-            //    {
-            //        bState = true;//读取成功
-            //    }
-            //    else
-            //    {
-            //        bState = false;//读取失败
-            //    }
-            //}
-            else if (gintIICChnl == 1)
+            else if (USBI2CDriver == 3)
+            {
+                if (CH341Device.CurrentWriteBytes(I2C_Address, WriteDataNum, WriteDataBuf))
+                {
+                    bState = true;//读取成功
+                }
+                else
+                {
+                    bState = false;//读取失败
+                }
+            }
+            else if (USBI2CDriver == 1)
             {
                 if (CP2112Device.CurrentWriteBytes(I2C_Address, WriteDataNum, WriteDataBuf))
                 {
@@ -398,7 +399,7 @@ namespace I2CDownload
         {
             int intTemp = ReadDataNum;
             bool bState;
-            if (gintIICChnl == 2)
+            if (USBI2CDriver == 2)
             {
                 if (Aardvark_Device.CurrentReadBytes(I2C_Address, ReadDataNum, ReadDataBuf))
                 {
@@ -410,19 +411,19 @@ namespace I2CDownload
                 }
 
             }
-            //else if (gintIICChnl == 2)
-            //{
-            //    if (CH341Device.CurrentReadBytes(I2C_Address, ReadDataNum, ReadDataBuf))
-            //    {
-            //        bState = true;//读取成功
-            //    }
-            //    else
-            //    {
-            //        bState = false;//读取失败
-            //    }
+            else if (USBI2CDriver == 3)
+            {
+                if (CH341Device.CurrentReadBytes(I2C_Address, ReadDataNum, ReadDataBuf))
+                {
+                    bState = true;//读取成功
+                }
+                else
+                {
+                    bState = false;//读取失败
+                }
 
-            //}
-            else if (gintIICChnl == 1)
+            }
+            else if (USBI2CDriver == 1)
             {
                 if (CP2112Device.CurrentReadBytes(I2C_Address, ReadDataNum, ReadDataBuf))
                 {
@@ -453,7 +454,7 @@ namespace I2CDownload
 
         public bool InterfaceInit()
         {
-            if (gintIICChnl == 2)
+            if (USBI2CDriver == 2)
             {
                 Aardvark_Device.deviceNum = 0;
                 Aardvark_Device.I2C_Open();
@@ -463,17 +464,17 @@ namespace I2CDownload
                     return false;//0:设置失败；1：设置成功
                 }                    
             }
-            //else if (gintIICChnl == 2)
-            //{
-            //    CH341Device.deviceNum = 0;
-            //    CH341Device.I2C_Open();
-            //    if (CH341Device.I2C_SetRate(400) == false)
-            //    {
-            //        CH341Device.I2C_Close();
-            //        return false;//0:设置失败；1：设置成功
-            //    }
-            //}
-            else if (gintIICChnl == 1)
+            else if (USBI2CDriver == 3)
+            {
+                CH341Device.deviceNum = 0;
+                CH341Device.I2C_Open();
+                if (CH341Device.I2C_SetRate(400) == false)
+                {
+                    CH341Device.I2C_Close();
+                    return false;//0:设置失败；1：设置成功
+                }
+            }
+            else if (USBI2CDriver == 1)
             {
                 CP2112Device.deviceNum = 0;
                 CP2112Device.I2C_Open();
@@ -493,15 +494,15 @@ namespace I2CDownload
 
         public int InterfaceClose()
         {
-            if (gintIICChnl == 3)
+            if (USBI2CDriver == 3)
             {
                 Aardvark_Device.I2C_Close();
             }
-            else if (gintIICChnl == 2)
+            else if (USBI2CDriver == 2)
             {
                 CH341Device.I2C_Close();
             }
-            else if (gintIICChnl == 1)
+            else if (USBI2CDriver == 1)
             {
                 CP2112Device.I2C_Close();
             }
@@ -606,7 +607,15 @@ namespace I2CDownload
             bytPW[3] = mbytCDBPW[3];
             return WriteBytes(gbytPasswordDevAddr, gbytPasswordWordAddr, 4, bytPW);
         }
-
+        public bool EnterVendorPW()//输入厂商密码
+        {
+            byte[] bytPW = new byte[4];
+            bytPW[0] = mbytVendorPW[0];
+            bytPW[1] = mbytVendorPW[1];
+            bytPW[2] = mbytVendorPW[2];
+            bytPW[3] = mbytVendorPW[3];
+            return WriteBytes(gbytPasswordDevAddr, gbytPasswordWordAddr, 4, bytPW);
+        }
         public bool CheckI2CRespond()//正常状态下检查I2C是否响应读操作来判断模块是否在位
         {
             byte[] bytRBuf = new byte[1];

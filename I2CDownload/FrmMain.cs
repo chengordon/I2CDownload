@@ -10,12 +10,12 @@ using System.IO;
 using System.Threading;
 
 
-namespace DSPFlashDownloader
+namespace I2CDownload
 {   
     public partial class FrmMain : Form
     {
         ClsDealHexFile mclsDealHexFile = new ClsDealHexFile();
-        //public ClsBase mclsModule = new ClsCMISFlashDownloader();
+        ClsBaseCDB mclsModule = new ClsBaseCDB();
         private string strFilePath_Setup_ini;
 
         string strBinFilePath = null;
@@ -29,24 +29,23 @@ namespace DSPFlashDownloader
         ClsIniFile mclsIniFile = new ClsIniFile();
         CDatabase cdaba = new CDatabase();
         string[] str_ReportDatabase = { "UsbAdapter", "Type", "DevName", "PassNum", "TotalNum", "Date", "CostTime", "State", "HexFile" };
-        int USBI2CDriver = 2; //0: TestBoard; 1:WDTBox; 2:Aardvark Box
-        public I2CToolLibrary.I2C_Device i2cDevice;// = new I2CToolLibrary.I2C_Device();
-        public TestboardSoftware.ClsBase mclsModule;//=new ClsBase();
+        //int USBI2CDriver = 2; //0: TestBoard; 1:WDTBox; 2:Aardvark Box
+        public CP2112Library.CP2112_Device i2cDevice;// = new I2CToolLibrary.I2C_Device();
+        public CH341Library.CH341_Device CH341Device;// = new CH341Library.CH341_Device();
         public const byte CDBTableIndex = 0x9F; //CDB表索引
         const int CDBCMDSize = 6;//指令长度定为6Bytes
-        static byte DeviceAddr = 0xA0; //50
+        static byte DeviceAddr; //50
         const byte CDBCmdAddr = 0x80;
         const byte CDBDataAddr = 0x82;
         const byte BlockSize = 128;
         const UInt16 EPLDataSize = 0x800;//数据块长度定为2048Bytes
         const byte DelayTime = 5;
         bool isAbortDownload = false;
-        bool m_StartProgram = false;
-        bool m_LowPower = false;
-        byte[] mbytVendorPW = { 0x80, 0x00, 0x00, 0x03 };
-        string SoftwareType = "DSP";//FW
+        //bool m_StartProgram = false;
+        //bool m_LowPower = false;
+        string strCDBType = "DSP";
         private bool bTBConnected = false;//true:测试板已经连接
-        string[] usbDrivers = { "C8051F340", "CP2112", "TP240141" };
+        string[] usbDrivers = { "C8051F340", "CP2112", "TP240141", "CH341" };
         public FrmMain()
         {
             InitializeComponent();
@@ -54,111 +53,24 @@ namespace DSPFlashDownloader
         }
         private bool InitTestBoard()
         {
-            if (bTBConnected)
+            if (mclsModule.InterfaceInit())
             {
-                lblState.Text = "Testboard is connected";
+                lblState.Text = strings.TestboardConnected;
                 return true;
             }
             else
             {
-                lblState.Text = "Testboard is disconnected";
+                //setShowMessage(strings.TestboardDisconnected + ".", Color.Red);
+                lblState.Text = strings.TestboardDisconnected;
                 return false;
             }
         }
-        private bool OpenI2CPort()
+        //断开测试板
+        private void DisconnectTestBoard()
         {
-            bool bOk = false;
-            if (USBI2CDriver == 2)
-            {
-                bOk = AAI2cSlave.InitAAI2cSlave();
-            }
-            else if (USBI2CDriver == 1)
-            {
-                i2cDevice = new I2CToolLibrary.I2C_Device();
-                bOk = i2cDevice.I2C_Open();
-                //i2cDevice.I2C_SetRate(400);
-            }
-            else
-            {
-                mclsModule = new TestboardSoftware.ClsBase();
-                bOk = mclsModule.InterfaceInit();
-            }
-            return bOk;
+            mclsModule.InterfaceClose();
         }
-
-        private bool CloseI2CPort()
-        {
-            bool bOk = false;
-            if (USBI2CDriver == 2)
-            {
-                bOk = AAI2cSlave.Close();
-            }
-            else if (USBI2CDriver == 1)
-            {
-                if (i2cDevice != null)
-                    bOk = i2cDevice.I2C_Close();
-            }
-            else
-            {
-                if (mclsModule != null)
-                    mclsModule.InterfaceClose();
-            }
-            return bOk;
-        }
-
-        private bool WriteBytes(byte SlaveAddr, byte offsetAddr, int length, byte[] wtBytes)
-        {
-            bool bOk = false;
-            if (USBI2CDriver == 2)
-            {
-                bOk = AAI2cSlave.WriteBytes(offsetAddr, length, wtBytes);
-            }
-            else if (USBI2CDriver == 1)
-            {
-                bOk = i2cDevice.WriteBytes(SlaveAddr, offsetAddr, length, wtBytes);
-            }
-            else
-            {
-                bOk = mclsModule.WriteBytes(SlaveAddr, offsetAddr, length, wtBytes);
-            }
-            return bOk;
-            
-        }
-
-        private bool ReadBytes(byte SlaveAddr, byte offsetAddr, byte length, byte[] outBytes)
-        {
-            bool bOk = false;
-            if (USBI2CDriver == 2)
-            {
-                bOk = AAI2cSlave.ReadBytes(offsetAddr, length, outBytes);
-            }
-            else if (USBI2CDriver == 1)
-            {
-                bOk = i2cDevice.ReadBytes(SlaveAddr, offsetAddr, length, outBytes);
-            }
-            else
-            {
-                bOk = mclsModule.ReadBytes(SlaveAddr, offsetAddr, length, outBytes);
-            }
-            return bOk;
-
-        }
-
-        bool SoftwareReset()
-        {
-            byte[] cmd = { 0x08 }; //SoftwareReset
-            return WriteBytes(DeviceAddr, 0x1A, 1, cmd);
-        }
-        bool LowPwrRequestSW(bool onoff)
-        {
-            byte[] cmd = new byte[1];
-            ReadBytes(DeviceAddr, 0x1A, 1, cmd);
-            if (onoff)
-                cmd[0] |= (byte)0x10;
-            else
-                cmd[0] &= 0xEF;
-            return WriteBytes(DeviceAddr, 0x1A, 1, cmd);
-        }
+   
 
         private string GetOpenFilePath(string strFileFolder, string fileFilter)
         {
@@ -229,6 +141,8 @@ namespace DSPFlashDownloader
         }
         private void ReadBin(string filename, ref byte[] buffer)
         {
+            if (filename == "")
+                return;
             FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read);
             BinaryReader binreader = new BinaryReader(fs, Encoding.ASCII);
             int file_len = (int)fs.Length;//获取bin文件长度
@@ -250,15 +164,6 @@ namespace DSPFlashDownloader
             fs.Close();
         }
         
-        public bool EnterVendorPW()//输入厂商密码
-        {
-            byte[] bytPW = new byte[4];
-            bytPW[0] = mbytVendorPW[0];
-            bytPW[1] = mbytVendorPW[1];
-            bytPW[2] = mbytVendorPW[2];
-            bytPW[3] = mbytVendorPW[3];
-            return WriteBytes(DeviceAddr, 0x7A, 4, bytPW);
-        }
         public byte CdbChkCode(byte[] bytCmd, byte[] bytData, UInt16 IDataLen)
         {
             byte chk = 0;
@@ -279,8 +184,8 @@ namespace DSPFlashDownloader
             byte[] tablesel = new byte[1];
             byte[] bytTemp = new byte[1];
             tablesel[0] = bytTable;
-            if (WriteBytes(DeviceAddr, 0x7F, 1, tablesel) == false) return false; //A0 7F ['0x9F']
-            if (ReadBytes(DeviceAddr, 0x7F, 1, bytTemp) == false) return false;
+            if (mclsModule.WriteBytes(DeviceAddr, 0x7F, 1, tablesel) == false) return false; //A0 7F ['0x9F']
+            if (mclsModule.ReadBytes(DeviceAddr, 0x7F, 1, bytTemp) == false) return false;
             if (tablesel[0] != bytTemp[0]) return false;
             return true;
         }
@@ -288,7 +193,7 @@ namespace DSPFlashDownloader
         public byte ReadStatus()//读状态值
         {
             byte[] tablesel = new byte[1];  //A0L byte37 
-            if (ReadBytes(DeviceAddr, 37, 1, tablesel) == false)
+            if (mclsModule.ReadBytes(DeviceAddr, 37, 1, tablesel) == false)
                 return 0x40;
             return tablesel[0];
         }
@@ -331,8 +236,8 @@ namespace DSPFlashDownloader
             //选取数据表
             if (WriteCDBTableSel(CDBTableIndex) == false) return false;   //A0 7F ['0x9F']
 
-            if (WriteBytes(DeviceAddr, CDBDataAddr, 6, bytDataBuf) == false) return false;
-            if (WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false) return false;
+            if (mclsModule.WriteBytes(DeviceAddr, CDBDataAddr, 6, bytDataBuf) == false) return false;
+            if (mclsModule.WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false) return false;
             return true;
         }
         public bool CDBUpgradeStart(byte[] bytData, UInt32 IFileLen, byte IDataLen)
@@ -365,8 +270,8 @@ namespace DSPFlashDownloader
             //选取数据表
             if (WriteCDBTableSel(CDBTableIndex) == false) return false;   //A0 7F ['0x9F']
             byte len = (byte)(CDBCMDSize + bytDataBuf[2]);
-            if (WriteBytes(DeviceAddr, CDBDataAddr, len, bytDataBuf) == false) return false;
-            if (WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false) return false;
+            if (mclsModule.WriteBytes(DeviceAddr, CDBDataAddr, len, bytDataBuf) == false) return false;
+            if (mclsModule.WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false) return false;
             return true;
         }
         public bool CDBUpgradeComplete()
@@ -377,8 +282,8 @@ namespace DSPFlashDownloader
             //选取数据表
             if (WriteCDBTableSel(CDBTableIndex) == false) return false;   //A0 7F ['0x9F']
 
-            if (WriteBytes(DeviceAddr, CDBDataAddr, CDBCMDSize, bytDataBuf) == false) return false;
-            if (WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false) return false;
+            if (mclsModule.WriteBytes(DeviceAddr, CDBDataAddr, CDBCMDSize, bytDataBuf) == false) return false;
+            if (mclsModule.WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false) return false;
             return true;
         }
 
@@ -390,8 +295,8 @@ namespace DSPFlashDownloader
             //选取数据表
             if (WriteCDBTableSel(CDBTableIndex) == false) return false;   //A0 7F ['0x9F']
 
-            if (WriteBytes(DeviceAddr, CDBDataAddr, (byte)(CDBCMDSize + bytDataBuf[2]), bytDataBuf) == false) return false;
-            if (WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false) return false;
+            if (mclsModule.WriteBytes(DeviceAddr, CDBDataAddr, (byte)(CDBCMDSize + bytDataBuf[2]), bytDataBuf) == false) return false;
+            if (mclsModule.WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false) return false;
             return true;
         }
         public bool CDBUpgradeCommitImage()
@@ -402,8 +307,8 @@ namespace DSPFlashDownloader
             //选取数据表
             if (WriteCDBTableSel(CDBTableIndex) == false) return false;   //A0 7F ['0x9F']
 
-            if (WriteBytes(DeviceAddr, CDBDataAddr, CDBCMDSize, bytDataBuf) == false) return false;
-            if (WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false) return false;
+            if (mclsModule.WriteBytes(DeviceAddr, CDBDataAddr, CDBCMDSize, bytDataBuf) == false) return false;
+            if (mclsModule.WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false) return false;
 
             return true;
         }
@@ -418,7 +323,7 @@ namespace DSPFlashDownloader
             //包头6个字节
             bytDataBuf[0] = 0x0;
             bytDataBuf[1] = 0x0;
-            bytDataBuf[2] = (byte)(LPLDataSize+0x04); //固定长度
+            bytDataBuf[2] = (byte)(LPLDataSize + 0x04); //固定长度
             bytDataBuf[3] = 0x0; //CdbChkCode(bytCmdBuf, bytDataBuf, 0x44);
             bytDataBuf[4] = 0x0;
             bytDataBuf[5] = 0x0;
@@ -448,11 +353,11 @@ namespace DSPFlashDownloader
                 bytDataBuf[3] = CdbChkCode(bytCmdBuf, bytDataBuf, bytDataBuf[2]); //生成校验码
 
                 //下发数据
-                if (WriteBytes(DeviceAddr, CDBDataAddr, CDBCMDSize + bytDataBuf[2], bytDataBuf) == false)
+                if (mclsModule.WriteBytes(DeviceAddr, CDBDataAddr, CDBCMDSize + bytDataBuf[2], bytDataBuf) == false)
                     return false; //6+LPL len 0x44
                 Thread.Sleep(5);
                 //下发命令
-                if (WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false)
+                if (mclsModule.WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false)
                     return false;
                 Thread.Sleep(10);
                 //读取状态
@@ -498,7 +403,7 @@ namespace DSPFlashDownloader
                     //下发数据
                     DelayMS(DelayTime);
                     Array.Copy(bytData, page_offset * 128, bytDataBuf, 0, 128);
-                    if (WriteBytes(DeviceAddr, CDBCmdAddr, 0x80, bytDataBuf) == false)  // 0x80 = 128
+                    if (mclsModule.WriteBytes(DeviceAddr, CDBCmdAddr, 0x80, bytDataBuf) == false)  // 0x80 = 128
                         return false; //6+LPL len 0x44
                     DelayMS(DelayTime);// Thread.Sleep(5);
                 }
@@ -522,11 +427,11 @@ namespace DSPFlashDownloader
                 bytDataBuf[3] = CdbChkCode(bytCmdBuf, bytDataBuf, bytDataBuf[2]); //生成校验码
 
                 //下发数据
-                if (WriteBytes(DeviceAddr, CDBDataAddr, (byte)(CDBCMDSize + bytDataBuf[2]), bytDataBuf) == false)
+                if (mclsModule.WriteBytes(DeviceAddr, CDBDataAddr, (byte)(CDBCMDSize + bytDataBuf[2]), bytDataBuf) == false)
                     return false; //6+LPL len 0x44
                 DelayMS(DelayTime); //Thread.Sleep(5);
                 //下发命令
-                if (WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false)
+                if (mclsModule.WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false)
                     return false;
                 DelayMS(DelayTime); //Thread.Sleep(10);
                 //读取状态
@@ -539,7 +444,7 @@ namespace DSPFlashDownloader
                         if (bytStatus == 1)
                             break;
                     }
-                    DelayMS(DelayTime*10);// Thread.Sleep(50); //需要等待,完成才能继续下发
+                    DelayMS(DelayTime * 10);// Thread.Sleep(50); //需要等待,完成才能继续下发
                 }
 
                 iIndex = (UInt32)(iIndex + iCurWriteNum);
@@ -588,10 +493,10 @@ namespace DSPFlashDownloader
                 //选取数据表
                 if (WriteCDBTableSel(CDBTableIndex) == false) return false;   //A0 7F ['0x9F']
                 //下发数据
-                if (WriteBytes(DeviceAddr, CDBDataAddr, CDBCMDSize + bytDataBuf[2], bytDataBuf) == false) return false;
+                if (mclsModule.WriteBytes(DeviceAddr, CDBDataAddr, CDBCMDSize + bytDataBuf[2], bytDataBuf) == false) return false;
                 Thread.Sleep(5);
                 //下发命令
-                if (WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false) return false;
+                if (mclsModule.WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false) return false;
                 Thread.Sleep(10);
                 //读取状态
                 for (i = 0; i < 1000; i++)
@@ -607,7 +512,7 @@ namespace DSPFlashDownloader
                 }
 
 
-                if (ReadBytes(DeviceAddr, 0x80, (byte)(iCurReadNum + 12), bytRBuf) == false) return false;  //12个字节是包头开销，后面的是净荷
+                if (mclsModule.ReadBytes(DeviceAddr, 0x80, (byte)(iCurReadNum + 12), bytRBuf) == false) return false;  //12个字节是包头开销，后面的是净荷
                 Array.Copy(bytRBuf, 12, bytData, iIndex, iCurReadNum);
                 Thread.Sleep(5);
 
@@ -662,10 +567,10 @@ namespace DSPFlashDownloader
                 //选取数据表
                 if (WriteCDBTableSel(CDBTableIndex) == false) return false;   //A0 7F ['0x9F']
                 //下发数据
-                if (WriteBytes(DeviceAddr, CDBDataAddr, CDBCMDSize + bytDataBuf[2], bytDataBuf) == false) return false;
+                if (mclsModule.WriteBytes(DeviceAddr, CDBDataAddr, CDBCMDSize + bytDataBuf[2], bytDataBuf) == false) return false;
                 Thread.Sleep(5);
                 //下发命令
-                if (WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false) return false;
+                if (mclsModule.WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false) return false;
                 Thread.Sleep(10);
                 //读取状态
                 for (i = 0; i < 1000; i++)
@@ -679,14 +584,14 @@ namespace DSPFlashDownloader
                     }
                     Thread.Sleep(50); //需要等待,完成才能继续下发
                 }
-                ReadBytes(DeviceAddr, 0x80, (byte)BlockSize, bytRBuf);
+                mclsModule.ReadBytes(DeviceAddr, 0x80, (byte)BlockSize, bytRBuf);
 
                 for (int page_offset = 0; page_offset < 16; page_offset++) //16页*128 = 2048
                 {
                     if (WriteCDBTableSel((byte)(0xA0 + page_offset)) == false)
                         return false;   //A0 7F ['0xA0']--AF
                     //读数据
-                    if (ReadBytes(DeviceAddr, 0x80, (byte)BlockSize, bytRBuf) == false) return false;
+                    if (mclsModule.ReadBytes(DeviceAddr, 0x80, (byte)BlockSize, bytRBuf) == false) return false;
                     Array.Copy(bytRBuf, 0, bytData, (iIndex + page_offset * BlockSize), BlockSize);
                     Thread.Sleep(5);
                 }
@@ -705,7 +610,7 @@ namespace DSPFlashDownloader
         private bool ReadFlashLPL()
         {
             lblStatus.Text = "Read Image LPL";
-            EnterVendorPW();
+            mclsModule.EnterVendorPW();
             UInt32 DataLen = (UInt32)FlashSize * 1024;
             bytFlashBinData_1Dim = new byte[DataLen];
             UInt32 iCurReadNum;
@@ -747,7 +652,7 @@ namespace DSPFlashDownloader
         private bool ReadFlashEPL()
         {
             lblStatus.Text = "Read Image EPL";
-            EnterVendorPW();
+            mclsModule.EnterVendorPW();
             UInt32 DataLen = (UInt32)FlashSize * 1024;
             bytFlashBinData_1Dim = new byte[DataLen];
             UInt32 iCurReadNum;
@@ -789,7 +694,7 @@ namespace DSPFlashDownloader
         private bool WriteFlashLPL()
         {
             lblStatus.Text = "Strat Program LPL!";
-            EnterVendorPW(); //0x7A, [0x00, 0x00, 0x10, 0x11] 密码校验
+            mclsModule.EnterVendorPW(); //0x7A, [0x00, 0x00, 0x10, 0x11] 密码校验
             UInt32 DataLen = (UInt32)bytFlashBinData_1Dim.Length;
             UInt32 iCurWriteNum;
             UInt32 iAddr = 0;
@@ -893,8 +798,8 @@ namespace DSPFlashDownloader
         private bool WriteFlashEPL()
         {
             lblStatus.Text = "Strat Download DSP!";
-            string DownloadType = "Download " + SoftwareType;
-            EnterVendorPW(); //输入密码校验
+            string DownloadType = "Download " + strCDBType;
+            mclsModule.EnterVendorPW(); //输入密码校验
             UInt32 DataLen = (UInt32)bytFlashBinData_1Dim.Length;
             UInt32 iCurWriteNum;
             UInt32 iAddr = 0;
@@ -1026,11 +931,10 @@ namespace DSPFlashDownloader
             //选取数据表
             if (WriteCDBTableSel(CDBTableIndex) == false) return false;   //A0 7F ['0x9F']
 
-            if (WriteBytes(DeviceAddr, CDBDataAddr, CDBCMDSize, bytDataBuf) == false) return false;
-            if (WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false) return false;
+            if (mclsModule.WriteBytes(DeviceAddr, CDBDataAddr, CDBCMDSize, bytDataBuf) == false) return false;
+            if (mclsModule.WriteBytes(DeviceAddr, CDBCmdAddr, 2, bytCmdBuf) == false) return false;
             return true;
         }
-
 
         private bool DelayMS(int delayTime_ms)
         {
@@ -1127,34 +1031,49 @@ namespace DSPFlashDownloader
             strFilePath_Setup_ini = Application.StartupPath + "\\Files\\Config.ini";
             mclsIniFile.FileName = strFilePath_Setup_ini;
 
+            strTemp = mclsIniFile.ReadString("FrmMCUDownloadSetup", "DeviceAddr", "A0");
+            if (strTemp != "")
+            {
+                this.txtDeviceAddr.Text = strTemp;
+                DeviceAddr = Convert.ToByte(strTemp, 16);
+            }
+            else
+            {
+                DeviceAddr = 0xA0;
+            }
             //USBI2CDriver
             strTemp = mclsIniFile.ReadString("FrmMCUDownloadSetup", "USBI2CDriver", "0");
-            if (strTemp.ToLower().Equals("2"))  //USBI2CDriver
-            {
-                USBI2CDriver = 2;
-            }
-            else if (strTemp.ToLower().Equals("1")) //WDT Box
-            {
-                USBI2CDriver = 1;
-            }
-            else //Test Board
-            {
-                USBI2CDriver = 0;
-            }
+            //if (strTemp.ToLower().Equals("3"))  //USBI2CDriver
+            //{
+            //    USBI2CDriver = 3;
+            //}
+            //else if (strTemp.ToLower().Equals("2"))  //USBI2CDriver
+            //{
+            //    USBI2CDriver = 2;
+            //}
+            //else if (strTemp.ToLower().Equals("1")) //WDT Box
+            //{
+            //    USBI2CDriver = 1;
+            //}
+            //else //Test Board
+            //{
+            //    USBI2CDriver = 0;
+            //}
+            mclsModule.USBI2CDriver = Convert.ToInt32(strTemp);
             comboUSBDriver.Items.AddRange(usbDrivers);
-            comboUSBDriver.SelectedIndex = USBI2CDriver;
+            comboUSBDriver.SelectedIndex = mclsModule.USBI2CDriver;
 
             //HexFilePath
             strBinFilePath = mclsIniFile.ReadString("FrmMCUDownloadSetup", "strBinFilePath", "");
             txt_HexFileName.Text = strBinFilePath;
 
 
-            strTemp = mclsIniFile.ReadString("FlashDownloaderSetup", "DisplayFlashSize", "512");
+            strTemp = mclsIniFile.ReadString("FrmMCUDownloadSetup", "DisplayFlashSize", "512K");
             string str;
             cmbBoxDisplayLength.SelectedIndex = 0;
             for (int i = 0; i < cmbBoxDisplayLength.Items.Count; i++)
             {
-                str = cmbBoxDisplayLength.Items[i].ToString().ToUpper().Replace("K", "");
+                str = cmbBoxDisplayLength.Items[i].ToString().ToUpper();//.Replace("K", "");
                 if (str.Equals(strTemp))
                 {
                     cmbBoxDisplayLength.SelectedIndex = i;
@@ -1205,13 +1124,19 @@ namespace DSPFlashDownloader
             //strTemp = m_USBPower.ToString().ToLower();
             //mclsIniFile.WriteString("FrmMCUDownloadSetup", "chkUSBPower", strTemp);
 
+            strTemp = cmbBoxDisplayLength.Text;
+            mclsIniFile.WriteString("FrmMCUDownloadSetup", "DisplayFlashSize", strTemp);
             //USBI2CDriver            
-            strTemp = USBI2CDriver.ToString();
+            strTemp = mclsModule.USBI2CDriver.ToString();
             mclsIniFile.WriteString("FrmMCUDownloadSetup", "USBI2CDriver", strTemp);
 
             //HexFilePath
             strTemp = strBinFilePath;
             mclsIniFile.WriteString("FrmMCUDownloadSetup", "strBinFilePath", strTemp);
+
+            strTemp = this.txtDeviceAddr.Text;
+            mclsIniFile.WriteString("FrmMCUDownloadSetup", "DeviceAddr", strTemp);
+
             #endregion
 
             this.Dispose();
@@ -1221,7 +1146,7 @@ namespace DSPFlashDownloader
             uint NumDev = 1;
             if (bTBConnected == false)
             {
-                if (OpenI2CPort() == false)
+                if (mclsModule.InterfaceInit() == false)
                 {
                     lblState.Text = "Connect  Fail";
                     //bt_Connect.Enabled = true;
@@ -1268,11 +1193,13 @@ namespace DSPFlashDownloader
         {
             bt_Connect.Enabled = false;
             lblStatus.Text = " ";
+            if (txtDeviceAddr.Text != "")
+                DeviceAddr = Convert.ToByte(txtDeviceAddr.Text, 16);
             if (bt_Connect.Text == "Connect")
             {
                 if (bTBConnected == false)
                 {
-                    if (OpenI2CPort() == false)
+                    if (mclsModule.InterfaceInit() == false)
                     {
                         lblState.Text = "Connect  Fail";
                         bt_Connect.Enabled = true;
@@ -1290,7 +1217,7 @@ namespace DSPFlashDownloader
             {
                 if (bTBConnected == true)
                 {
-                    CloseI2CPort();
+                    mclsModule.InterfaceClose();
                     bTBConnected = false;
                     bt_Connect.Text = "Connect";
                     lblState.Text = "Disconnect Successful";
@@ -1300,91 +1227,12 @@ namespace DSPFlashDownloader
             ReadBin(strBinFilePath, ref bytFlashBinData_1Dim);
             rTxt_BinFile.Text = mclsDealHexFile.ConvetArrayToBinFile(bytFlashBinData_1Dim, FlashSize, DisplayLineLen, AddressSize).Trim();
         }
-        private void bt_Download_Click(object sender, EventArgs e)
-        {
-            DateTime start = DateTime.Now;
-            lblStatus.Text = " ";
-            bt_Download.Enabled = false;
-
-            if (strBinFilePath.Equals(""))
-            {
-                MessageBox.Show("Please specify a intel-hex file to Download", "Warning");
-                bt_Download.Enabled = true;
-                gb_Filename.Enabled = true;
-                bt_Browse.Focus();
-                return;
-            }
-
-            if (bytFlashBinData_1Dim.Length <= 1)
-                ReadBin(strBinFilePath, ref bytFlashBinData_1Dim);
-            if (!bTBConnected)
-            {
-                if (!OpenI2CPort())
-                {
-                    lblState.Text = "Failed Downloading";
-                    bt_Download.Enabled = true;
-                    return;
-                }
-                lblState.Text = "Connect Successful";
-                bt_Connect.Text = "Disconnect";
-                bTBConnected = true;
-            }
-            lblState.Text = "Downloading";
-            if (WriteFlashEPL() == false)//写Flash
-            {
-                lblState.Text = "Failed Downloading";
-                bt_Download.Enabled = true;
-                return;
-            }
-            else
-            {
-                if (m_StartProgram)
-                {
-                    //EnterVendorPW();
-                    SoftwareReset();
-                    DelayMS(2000);
-                }
-                if (SoftwareType.Equals("DSP") == true)
-                {
-                    byte[] password = { 0x80, 0x00, 0x11, 0x01 };
-                    WriteBytes(DeviceAddr, 0x7A, 4, password);
-                    WriteCDBTableSel(0xE6);
-                    byte[] fwversion = new byte[4];
-                    ReadBytes(DeviceAddr, 0x88, 4, fwversion);
-                    
-                }
-                if (m_LowPower)
-                {
-                    LowPwrRequestSW(true);
-                }
-                lblState.Text = "Succeeded Downloading";
-            }
-
-            bt_Download.Enabled = true;
-            bt_Download.Focus();
-            DateTime stop = DateTime.Now;
-            string sCostTime = (stop - start).TotalSeconds.ToString();
-            lblStatus.Text = "Download Successful " + sCostTime + "s";
-            string sAdapter = usbDrivers[USBI2CDriver];//"USB " + m_DeviceNum.ToString();
-
-
-            //string sAdapterSN = "USB 0";
-            //string sType = "Download" + SoftwareType;
-            //string sDate = start.ToString(); //获取当前时间           
-
-            //string sHexFile = Path.GetFileName(strBinFilePath);
-            //AccessInsert(sAdapter, sType, sDevName, sPassNum, sTotalNum, sDate, sCostTime, sState, sHexFile);
-
-            bt_Download.Enabled = true;
-            bt_Download.Focus();
-        }
-     
         
         private void comboUSBDriver_SelectedIndexChanged(object sender, EventArgs e)
         {
-            CloseI2CPort();
+            mclsModule.InterfaceClose();
             bt_Connect.Enabled = false;
-            USBI2CDriver = comboUSBDriver.SelectedIndex;
+            mclsModule.USBI2CDriver = comboUSBDriver.SelectedIndex;
             bTBConnected = false;// OpenI2CPort();
             bt_Connect.Text = "Connect";
             lblState.Text = "Switch USB Driver";
@@ -1456,7 +1304,7 @@ namespace DSPFlashDownloader
         {
             lblStatus.Text = "Get Firmware Info(0x0100h)";
             byte bytStatus = 0;
-            EnterVendorPW(); //输入密码校验
+            mclsModule.EnterVendorPW(); //输入密码校验
 
             CDBUpgradeGetStatus();
             for (int i = 0; i < 1000; i++) //读当前37字节的高位是否为1
@@ -1470,7 +1318,7 @@ namespace DSPFlashDownloader
             }
             if (!CDBStatusError(bytStatus, "Get Firmware Info Fail")) return;
             byte[] tablesel = new byte[120];  //A0L byte37 
-            if (ReadBytes(0xA0, 0x88, 120, tablesel) == true)
+            if (mclsModule.ReadBytes(DeviceAddr, 0x88, 120, tablesel) == true)
             {
                 ImageAVer.Text = tablesel[2].ToString() + "." + tablesel[3].ToString();
                 ImageBVer.Text = tablesel[38].ToString() + "." + tablesel[39].ToString();
@@ -1492,7 +1340,7 @@ namespace DSPFlashDownloader
                 ReadBin(strBinFilePath, ref bytFlashBinData_1Dim);
             if (!bTBConnected)
             {
-                if (!OpenI2CPort())
+                if (!mclsModule.InterfaceInit())
                 {
                     lblState.Text = "Failed Downloading";
                     bt_Download.Enabled = true;
@@ -1537,7 +1385,7 @@ namespace DSPFlashDownloader
             lblStatus.Text = "Abort Firmware Download(0x0102h)";
             isAbortDownload = true;
             byte bytStatus = 0;
-            EnterVendorPW();
+            mclsModule.EnterVendorPW();
             CDBUpgradeAbort();
             for (int i = 0; i < 1000; i++)  //读当前37字节的高位是否为1
             {
@@ -1573,7 +1421,7 @@ namespace DSPFlashDownloader
             //"CDB_CMD_FW_UPGRADE_RUN_IMAGE"     : 0x0109,
             isAbortDownload = false;
             if (InitTestBoard() == false) return;
-            EnterVendorPW();
+            mclsModule.EnterVendorPW();
             gb_ReadImage.Enabled = gb_Function.Enabled = false;
 
             CDBUpgradeRunImage();
@@ -1597,7 +1445,7 @@ namespace DSPFlashDownloader
             byte bytStatus = 0;
             isAbortDownload = false;
             if (InitTestBoard() == false) return;
-            EnterVendorPW();
+            mclsModule.EnterVendorPW();
             CDBUpgradeCommitImage();
             for (int i = 0; i < 1000; i++) //读当前37字节的高位是否为1
             {
@@ -1654,6 +1502,155 @@ namespace DSPFlashDownloader
             if (string.IsNullOrEmpty(rTxt_BinFile.Text.Trim())) return;
 
             WriteBin(strPath, bytFlashBinData_1Dim);
+        }
+
+        public bool EEPROMWriteBytes(byte memoryAddress, byte[] data)
+        {
+            if (data == null || data.Length == 0)
+                return false;
+
+            return mclsModule.WriteBytes(DeviceAddr, memoryAddress, data.Length, data);
+        }
+
+        /// <summary>
+        /// 读取多个字节从AT24C02
+        /// </summary>
+        /// <param name="memoryAddress">起始存储器地址(0-255)</param>
+        /// <param name="length">要读取的字节数</param>
+        /// <returns>读取到的字节数组，如果失败返回null</returns>
+        public byte[] EEPROMReadBytes(byte memoryAddress, byte length)
+        {
+            if (length <= 0)
+                return null;
+
+            byte[] buffer = new byte[length];
+            bool result = mclsModule.ReadBytes(DeviceAddr, memoryAddress, length, buffer);
+            if (result)
+            {
+                return buffer;
+            }
+            return null; // 读取失败返回null
+        }
+
+        private void bt_Download_Click(object sender, EventArgs e)
+        {
+            DateTime start = DateTime.Now;
+            lblStatus.Text = " ";
+            int DataLen = (int)bytFlashBinData_1Dim.Length;
+            int iCurWriteNum;
+            int iAddr = 0;
+            byte[] bytData = new byte[128];
+            bt_Download.Enabled = false;
+
+            if (strBinFilePath.Equals(""))
+            {
+                MessageBox.Show("Please specify a intel-hex file to Download", "Warning");
+                bt_Download.Enabled = true;
+                gb_Filename.Enabled = true;
+                bt_Browse.Focus();
+                return;
+            }
+
+            if (bytFlashBinData_1Dim.Length <= 1)
+                ReadBin(strBinFilePath, ref bytFlashBinData_1Dim);
+            if (!bTBConnected)
+            {
+                if (!mclsModule.InterfaceInit())
+                {
+                    lblState.Text = "Failed Downloading";
+                    bt_Download.Enabled = true;
+                    return;
+                }
+                lblState.Text = "Connect Successful";
+                bt_Connect.Text = "Disconnect";
+                bTBConnected = true;
+            }
+            lblState.Text = "Downloading";
+            //CH341Device.I2C_SetRate(100);
+
+            while (DataLen > 0)
+            {
+                iCurWriteNum = (int)DataLen;
+                if (iCurWriteNum > 128) iCurWriteNum = 128;//分段写，每次最多(SectorSize)个数据
+                DataLen -= iCurWriteNum;
+                //
+                Array.Copy(bytFlashBinData_1Dim, iAddr, bytData, 0, iCurWriteNum);
+                if (EEPROMWriteBytes((byte)iAddr, bytData) == false)
+                {
+                    lblStatus.Text = "Writing Flash FW Download Date Fail";
+                    bt_Download.Enabled = true;
+                    return;
+                }
+
+                iAddr += iCurWriteNum;
+                DelayMS(10);
+            }
+
+            bt_Download.Enabled = true;
+            bt_Download.Focus();
+            DateTime stop = DateTime.Now;
+            string sCostTime = (stop - start).TotalSeconds.ToString();
+            lblStatus.Text = "Download Successful " + sCostTime + "s";
+            string sAdapter = usbDrivers[mclsModule.USBI2CDriver];//"USB " + m_DeviceNum.ToString();
+
+            bt_Download.Enabled = true;
+            bt_Download.Focus();
+        }
+     
+
+        private void btnReadImage_Click(object sender, EventArgs e)
+        {
+            isAbortDownload = false;
+
+            gb_ReadImage.Enabled = gb_Function.Enabled = false;
+
+            int DataLen = 256;
+            bytFlashBinData_1Dim = new byte[DataLen];
+            int iCurReadNum;
+            byte iAddr = 0;
+            byte[] bytRBuf = new byte[256];
+            DateTime start = DateTime.Now;
+            int TotalLen = 256;
+            float percent = 0;
+            while (DataLen > 0 && !isAbortDownload)
+            {
+                iCurReadNum = DataLen;
+                if (iCurReadNum > 128) iCurReadNum = 128;//按扇区检查，每次最多(SectorSize)个数据
+                DataLen -= iCurReadNum;
+                lblStatus.Text = "Reading Image " + String.Format("{0:N2}", percent) + "%";
+                bytRBuf = EEPROMReadBytes(iAddr, (byte)iCurReadNum);
+                if (bytRBuf == null)
+                {
+                    DateTime stop1 = DateTime.Now;
+                    lblStatus.Text = "Reading Image Fail! cost " + (stop1 - start).TotalMilliseconds.ToString() + "ms";
+                    return;
+                }
+                percent = (TotalLen - DataLen) / (float)TotalLen * 100;
+                lblStatus.Text = "Reading Image " + String.Format("{0:N2}", percent) + "%";
+                Array.Copy(bytRBuf, 0, bytFlashBinData_1Dim, iAddr, iCurReadNum);
+                iAddr = (byte)(iAddr + iCurReadNum);
+                DelayMS(10);
+            }
+            if (isAbortDownload)
+            {
+                lblStatus.Text = "Read Image Abort!";
+                return;
+            }
+            else
+            {
+                DateTime stop = DateTime.Now;
+                lblStatus.Text = "Read Image Successful! cost " + (stop - start).TotalMilliseconds.ToString() + "ms";
+            }
+
+            rTxt_BinFile.Text = mclsDealHexFile.ConvetArrayToBinFile(bytFlashBinData_1Dim, FlashSize, DisplayLineLen, AddressSize).Trim();
+            txt_HexFile.Text = mclsDealHexFile.ConvetBinFileToHexFile(bytFlashBinData_1Dim).Trim();
+            gb_ReadImage.Enabled = gb_Function.Enabled = true;
+        }
+
+        private void txtDeviceAddr_TextChanged(object sender, EventArgs e)
+        {
+            if (txtDeviceAddr.Text != "")
+                DeviceAddr = Convert.ToByte(txtDeviceAddr.Text, 16);
         }
 
         

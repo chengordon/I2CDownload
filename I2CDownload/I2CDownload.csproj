@@ -67,6 +67,7 @@
   <ItemGroup>
     <Compile Include="AardvarkLibrary\aardvark.cs" />
     <Compile Include="AardvarkLibrary\Aardvark_Device.cs" />
+    <Compile Include="C8051F340\ClsBase.cs" />
     <Compile Include="CH341Library\CH341_Device.cs" />
     <Compile Include="CH341Library\USBIOXdll.cs" />
     <Compile Include="Class\AutoSizeForm.cs">
@@ -74,6 +75,7 @@
     </Compile>
     <Compile Include="Class\CDatabase.cs" />
     <Compile Include="Class\ClsBaseCDB.cs" />
+    <Compile Include="Class\ClsDealHexFile.cs" />
     <Compile Include="Class\ClsFlashSetupConfig.cs" />
     <Compile Include="Class\ClsImportExportData.cs" />
     <Compile Include="Class\ClsIniFile.cs" />
@@ -258,6 +260,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,4 +1,4 @@
-﻿namespace DSPFlashDownloader
+﻿namespace I2CDownload
 {
     partial class FrmMain
     {
@@ -69,6 +69,8 @@
             this.txt_HexFile = new System.Windows.Forms.TextBox();
             this.btn_WriteLPL = new System.Windows.Forms.Button();
             this.gb_BinFile = new System.Windows.Forms.GroupBox();
+            this.txtDeviceAddr = new System.Windows.Forms.TextBox();
+            this.label9 = new System.Windows.Forms.Label();
             this.txtLPLSize = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
             this.rTxt_BinFile = new System.Windows.Forms.RichTextBox();
@@ -80,6 +82,7 @@
             this.label7 = new System.Windows.Forms.Label();
             this.cmbBoxDisplayLineLen = new System.Windows.Forms.ComboBox();
             this.btn_AbortDownload = new System.Windows.Forms.Button();
+            this.btnReadImage = new System.Windows.Forms.Button();
             this.statusStrip1.SuspendLayout();
             this.gb_Filename.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -159,7 +162,7 @@
             // 
             // bt_Connect
             // 
-            this.bt_Connect.Location = new System.Drawing.Point(757, 33);
+            this.bt_Connect.Location = new System.Drawing.Point(755, 33);
             this.bt_Connect.Margin = new System.Windows.Forms.Padding(4);
             this.bt_Connect.Name = "bt_Connect";
             this.bt_Connect.Size = new System.Drawing.Size(99, 44);
@@ -204,19 +207,18 @@
             // 
             // bt_Download
             // 
-            this.bt_Download.Location = new System.Drawing.Point(1079, 33);
+            this.bt_Download.Location = new System.Drawing.Point(1078, 57);
             this.bt_Download.Margin = new System.Windows.Forms.Padding(4);
             this.bt_Download.Name = "bt_Download";
-            this.bt_Download.Size = new System.Drawing.Size(87, 44);
+            this.bt_Download.Size = new System.Drawing.Size(91, 44);
             this.bt_Download.TabIndex = 3;
-            this.bt_Download.Text = "Download";
+            this.bt_Download.Text = "WriteEPP";
             this.bt_Download.UseVisualStyleBackColor = true;
-            this.bt_Download.Visible = false;
             this.bt_Download.Click += new System.EventHandler(this.bt_Download_Click);
             // 
             // btn_TBPowerOff
             // 
-            this.btn_TBPowerOff.Location = new System.Drawing.Point(975, 33);
+            this.btn_TBPowerOff.Location = new System.Drawing.Point(971, 33);
             this.btn_TBPowerOff.Margin = new System.Windows.Forms.Padding(4);
             this.btn_TBPowerOff.Name = "btn_TBPowerOff";
             this.btn_TBPowerOff.Size = new System.Drawing.Size(99, 44);
@@ -227,7 +229,7 @@
             // 
             // btn_TBPowerOn
             // 
-            this.btn_TBPowerOn.Location = new System.Drawing.Point(866, 33);
+            this.btn_TBPowerOn.Location = new System.Drawing.Point(863, 33);
             this.btn_TBPowerOn.Margin = new System.Windows.Forms.Padding(4);
             this.btn_TBPowerOn.Name = "btn_TBPowerOn";
             this.btn_TBPowerOn.Size = new System.Drawing.Size(99, 44);
@@ -494,6 +496,8 @@
             // 
             // gb_BinFile
             // 
+            this.gb_BinFile.Controls.Add(this.txtDeviceAddr);
+            this.gb_BinFile.Controls.Add(this.label9);
             this.gb_BinFile.Controls.Add(this.txtLPLSize);
             this.gb_BinFile.Controls.Add(this.label8);
             this.gb_BinFile.Controls.Add(this.rTxt_BinFile);
@@ -510,6 +514,25 @@
             this.gb_BinFile.TabIndex = 40;
             this.gb_BinFile.TabStop = false;
             this.gb_BinFile.Text = "Bin";
+            // 
+            // txtDeviceAddr
+            // 
+            this.txtDeviceAddr.Location = new System.Drawing.Point(1032, 24);
+            this.txtDeviceAddr.Name = "txtDeviceAddr";
+            this.txtDeviceAddr.Size = new System.Drawing.Size(87, 25);
+            this.txtDeviceAddr.TabIndex = 31;
+            this.txtDeviceAddr.Text = "A0";
+            this.txtDeviceAddr.TextChanged += new System.EventHandler(this.txtDeviceAddr_TextChanged);
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(898, 27);
+            this.label9.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(127, 15);
+            this.label9.TabIndex = 30;
+            this.label9.Text = "DeviceAddr(Hex)";
             // 
             // txtLPLSize
             // 
@@ -580,6 +603,7 @@
             this.cmbBoxDisplayLength.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbBoxDisplayLength.FormattingEnabled = true;
             this.cmbBoxDisplayLength.Items.AddRange(new object[] {
+            "1K",
             "2K",
             "4K",
             "8K",
@@ -647,12 +671,24 @@
             this.btn_AbortDownload.UseVisualStyleBackColor = true;
             this.btn_AbortDownload.Click += new System.EventHandler(this.btn_AbortDownload_Click);
             // 
+            // btnReadImage
+            // 
+            this.btnReadImage.Location = new System.Drawing.Point(1077, 7);
+            this.btnReadImage.Margin = new System.Windows.Forms.Padding(4);
+            this.btnReadImage.Name = "btnReadImage";
+            this.btnReadImage.Size = new System.Drawing.Size(92, 44);
+            this.btnReadImage.TabIndex = 42;
+            this.btnReadImage.Text = "ReadEPP";
+            this.btnReadImage.UseVisualStyleBackColor = true;
+            this.btnReadImage.Click += new System.EventHandler(this.btnReadImage_Click);
+            // 
             // FrmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ClientSize = new System.Drawing.Size(1182, 583);
+            this.Controls.Add(this.btnReadImage);
             this.Controls.Add(this.btn_AbortDownload);
             this.Controls.Add(this.gb_BinFile);
             this.Controls.Add(this.groupBox2);
@@ -744,6 +780,9 @@
         private System.Windows.Forms.Button btn_AbortDownload;
         private System.Windows.Forms.TextBox txtLPLSize;
         private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.TextBox txtDeviceAddr;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Button btnReadImage;
     }
 }
 
